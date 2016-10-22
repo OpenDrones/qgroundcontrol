@@ -1,28 +1,15 @@
-/*=====================================================================
- 
- QGroundControl Open Source Ground Control Station
- 
- (c) 2009, 2014 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
- 
- This file is part of the QGROUNDCONTROL project
- 
- QGROUNDCONTROL is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- QGROUNDCONTROL is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with QGROUNDCONTROL. If not, see <http://www.gnu.org/licenses/>.
- 
- ======================================================================*/
+/****************************************************************************
+ *
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *
+ * QGroundControl is licensed according to the terms in the file
+ * COPYING.md in the root of the source code directory.
+ *
+ ****************************************************************************/
+
 
 /// @file
-///     @brief PX4 Firmware Upgrade operations which occur on a seperate thread.
+///     @brief PX4 Firmware Upgrade operations which occur on a separate thread.
 ///     @author Don Gagne <don@thegagnes.com>
 
 #include "PX4FirmwareUpgradeThread.h"
@@ -106,7 +93,7 @@ void PX4FirmwareUpgradeThreadWorker::_findBoardOnce(void)
             _foundBoardPortInfo = portInfo;
             emit foundBoard(_findBoardFirstAttempt, portInfo, boardType);
             if (!_findBoardFirstAttempt) {
-                if (boardType == QGCSerialPortInfo::BoardType3drRadio) {
+                if (boardType == QGCSerialPortInfo::BoardTypeSikRadio) {
                     _3drRadioForceBootloader(portInfo);
                     return;
                 } else {
@@ -141,7 +128,7 @@ bool PX4FirmwareUpgradeThreadWorker::_findBoardFromPorts(QGCSerialPortInfo& port
         qCDebug(FirmwareUpgradeVerboseLog) << "\tproduct ID:" << info.productIdentifier();
         
         boardType = info.boardType();
-        if (boardType != QGCSerialPortInfo::BoardTypeUnknown) {
+        if (info.canFlash()) {
             portInfo = info;
             return true;
         }
@@ -299,6 +286,7 @@ void PX4FirmwareUpgradeThreadWorker::_flash(void)
             _bootloaderPort = NULL;
             qCDebug(FirmwareUpgradeLog) << "Program failed:" << _bootloader->errorString();
             emit error(_bootloader->errorString());
+            return;
         }
         
         emit status("Verifying program...");
@@ -309,6 +297,7 @@ void PX4FirmwareUpgradeThreadWorker::_flash(void)
         } else {
             qCDebug(FirmwareUpgradeLog) << "Verify failed:" << _bootloader->errorString();
             emit error(_bootloader->errorString());
+            return;
         }
     }
     
